@@ -34,6 +34,8 @@ public class RNPushNotificationListenerService extends FirebaseMessagingService 
 
         final Bundle bundle = new Bundle();
 
+        Boolean isForeground = isApplicationInForeground();
+
         for(Map.Entry<String, String> entry : message.getData().entrySet()) {
             bundle.putString(entry.getKey(), entry.getValue());
         }
@@ -54,7 +56,7 @@ public class RNPushNotificationListenerService extends FirebaseMessagingService 
             }
 
             final int badge = data.optInt("badge", -1);
-            if (badge >= 0) {
+            if (badge >= 0 && !isForeground) {
                 ApplicationBadgeHelper.INSTANCE.setApplicationIconBadgeNumber(this, badge);
             }
         }
@@ -87,10 +89,10 @@ public class RNPushNotificationListenerService extends FirebaseMessagingService 
                         mReactInstanceManager.createReactContextInBackground();
                     }
                 }
-                
+
             }
         });
-        
+
     }
 
     private JSONObject getPushData(String dataString) {
@@ -111,7 +113,7 @@ public class RNPushNotificationListenerService extends FirebaseMessagingService 
         Boolean isForeground = isApplicationInForeground();
 
         RNPushNotificationJsDelivery jsDelivery = new RNPushNotificationJsDelivery(context);
-        bundle.putBoolean("foreground", isForeground);  
+        bundle.putBoolean("foreground", isForeground);
         jsDelivery.notifyNotification(bundle);
 
         // If contentAvailable is set to true, then send out a remote fetch event
@@ -121,9 +123,11 @@ public class RNPushNotificationListenerService extends FirebaseMessagingService 
 
         Log.v(LOG_TAG, "sendNotification: " + bundle);
 
-        Application applicationContext = (Application) context.getApplicationContext();
-        RNPushNotificationHelper pushNotificationHelper = new RNPushNotificationHelper(applicationContext);
-        pushNotificationHelper.sendToNotificationCentre(bundle);
+        if (!isForeground) {
+            Application applicationContext = (Application) context.getApplicationContext();
+            RNPushNotificationHelper pushNotificationHelper = new RNPushNotificationHelper(applicationContext);
+            pushNotificationHelper.sendToNotificationCentre(bundle);
+        }
     }
 
     private boolean isApplicationInForeground() {
