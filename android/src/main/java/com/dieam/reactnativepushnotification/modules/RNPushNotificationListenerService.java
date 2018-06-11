@@ -19,7 +19,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import android.app.IntentService;
 
-import org.json.JSONObject;
+import org.json.*;
 
 import java.util.List;
 import java.util.Random;
@@ -55,7 +55,9 @@ public class RNPushNotificationListenerService extends FirebaseMessagingService 
                 bundle.putString("color", data.optString("color", null));
             }
 
-            final int badge = data.optInt("badge", -1);
+            JsonObject additionalData = new JsonParser().parse(data.additionalData).getAsJsonObject();
+            System.out.println(objet.get(couleur).getAsString());
+            final int badge = additionalData.optInt("badge", -1);
             if (badge >= 0 && !isForeground) {
                 ApplicationBadgeHelper.INSTANCE.setApplicationIconBadgeNumber(this, badge);
             }
